@@ -5,18 +5,18 @@ function Login({ onZaloguj }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (nick.trim() === '') return;
 
-    // Zapisujemy nick w pamięci przeglądarki
     localStorage.setItem('shoutboxNick', nick);
-
-    // Informujemy App.jsx o zalogowaniu
     onZaloguj(nick);
   };
 
   return (
     <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-      <h2 style={{ color: '#8e44ad' }}>Wpisz swój nick, aby dołączyć</h2>
+      <h2 style={{ color: '#8e44ad' }}>
+        Wpisz swój nick, aby dołączyć
+      </h2>
 
       <form
         onSubmit={handleSubmit}
@@ -30,6 +30,7 @@ function Login({ onZaloguj }) {
           onChange={(e) => setNick(e.target.value)}
           style={{ maxWidth: '300px' }}
         />
+
         <button type="submit">Wejdź</button>
       </form>
     </div>

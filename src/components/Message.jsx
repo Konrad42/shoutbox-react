@@ -1,8 +1,6 @@
 function Message({ msg }) {
-  // Generujemy awatar na podstawie nicku
   const awatarUrl = `https://api.dicebear.com/9.x/bottts/svg?seed=${msg.author}`;
 
-  // Formatujemy czas
   const czas = new Date(msg.timestamp).toLocaleTimeString('pl-PL', {
     hour: '2-digit',
     minute: '2-digit',
@@ -42,7 +40,10 @@ function Message({ msg }) {
             marginBottom: '5px',
           }}
         >
-          <strong style={{ color: '#2c3e50' }}>{msg.author}</strong>
+          <strong style={{ color: '#2c3e50' }}>
+            {msg.author}
+          </strong>
+
           <span style={{ fontSize: '0.85em', color: '#7f8c8d' }}>
             {czas}
           </span>

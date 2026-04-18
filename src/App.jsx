@@ -8,8 +8,6 @@ const API_URL = 'https://apichat.m89.pl/api/messages';
 
 function App() {
   const [wiadomosci, setWiadomosci] = useState([]);
-
-  // Odczyt nicku z localStorage
   const [mojNick, setMojNick] = useState(
     localStorage.getItem('shoutboxNick') || ''
   );
@@ -21,7 +19,7 @@ function App() {
         const dane = await odpowiedz.json();
         setWiadomosci(dane);
       } catch (error) {
-        console.error(error);
+        console.error('Błąd pobierania wiadomości:', error);
       }
     };
 
@@ -45,11 +43,10 @@ function App() {
         }),
       });
     } catch (error) {
-      console.error(error);
+      console.error('Błąd wysyłania wiadomości:', error);
     }
   };
 
-  // Jeśli użytkownik nie ma nicku — pokazujemy ekran logowania
   if (!mojNick) {
     return (
       <div className="app-container">
@@ -59,7 +56,6 @@ function App() {
     );
   }
 
-  // Jeśli nick istnieje — pokazujemy czat
   return (
     <div className="app-container">
       <Header />
