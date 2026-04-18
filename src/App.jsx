@@ -8,9 +8,11 @@ const API_URL = 'https://apichat.m89.pl/api/messages';
 
 function App() {
   const [wiadomosci, setWiadomosci] = useState([]);
-  
-  // NOWOŚĆ: Inicjujemy stan nickiem z LocalStorage (jeśli istnieje)
-  const [mojNick, setMojNick] = useState(localStorage.getItem('shoutboxNick') || '');
+
+  // Odczyt nicku z localStorage
+  const [mojNick, setMojNick] = useState(
+    localStorage.getItem('shoutboxNick') || ''
+  );
 
   useEffect(() => {
     const pobierzDane = async () => {
@@ -18,10 +20,15 @@ function App() {
         const odpowiedz = await fetch(API_URL);
         const dane = await odpowiedz.json();
         setWiadomosci(dane);
-      } catch (error) { console.error(error); }
+      } catch (error) {
+        console.error(error);
+      }
     };
+
     pobierzDane();
+
     const interval = setInterval(pobierzDane, 2000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -29,15 +36,20 @@ function App() {
     try {
       await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Wysyłamy do bazy prawdziwy nick z naszego stanu!
-        body: JSON.stringify({ author: mojNick, text: nowyTekst })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          author: mojNick,
+          text: nowyTekst,
+        }),
       });
-    } catch (error) { console.error(error); }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  // NOWOŚĆ: RENDEROWANIE WARUNKOWE
-  // Jeśli nick jest pusty (''), zwracamy całkowicie inny ekran (Logowanie)
+  // Jeśli użytkownik nie ma nicku — pokazujemy ekran logowania
   if (!mojNick) {
     return (
       <div className="app-container">
@@ -47,16 +59,17 @@ function App() {
     );
   }
 
-  // Jeśli nick jest uzupełniony, użytkownik widzi normalny Czat
+  // Jeśli nick istnieje — pokazujemy czat
   return (
     <div className="app-container">
       <Header />
 
       <div className="chat-window">
         {wiadomosci.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#999' }}>Ładowanie wiadomości...</p>
+          <p style={{ textAlign: 'center', color: '#999' }}>
+            Ładowanie wiadomości...
+          </p>
         ) : (
-          // Używamy naszego nowego, czystego komponentu <Message /> !
           wiadomosci.map((msg) => (
             <Message key={msg.id} msg={msg} />
           ))
