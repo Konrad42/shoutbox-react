@@ -1,37 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-import Header from './components/Header';
-import MessageForm from './components/MessageForm';
-import Login from './components/Login';
-import Message from './components/Message';
+import Login from './Login';
+import MessageForm from './MessageForm';
+import Message from './Message';
 
-const SOCKET_URL = 'https://apichat.m89.pl';
-const API_URL = 'https://apichat.m89.pl/api/messages';
+const BASE_URL = 'https://apichat.m89.pl';
+const API_URL = `${BASE_URL}/api/messages`;
 
-const socket = io(SOCKET_URL);
+const socket = io(BASE_URL);
 
 function App() {
- 
- const ekranLogowania = document.getElementById('ekran-logowania');
-        const ekranCzatu = document.getElementById('ekran-czatu');
-        const inputNick = document.getElementById('input-nick');
-        const oknoWiadomosci = document.getElementById('okno-wiadomosci');
-        const inputSzukaj = document.getElementById('input-szukaj');
-        const inputWiadomosc = document.getElementById('input-wiadomosc');
-        const wskaznikPisania = document.getElementById('wskaznik-pisania'); // NOWOŚĆ
+  const [mojNick, setMojNick] = useState(localStorage.getItem('shoutboxNick') || '');
+  const [wiadomosci, setWiadomosci] = useState([]);
+  const [ktoPisze, setKtoPisze] = useState(null);
 
-  // 🔥 zapis nicka
-  useEffect(() => {
-    if (mojNick) {
-      localStorage.setItem('shoutboxNick', mojNick);
-    }
-  }, [mojNick]);
+  const typingTimerRef = useRef(null);
 
-  // 🔥 socket logic
   useEffect(() => {
-    socket.on('chat_update', (noweWiadomosci) => {
-      setWiadomosci(noweWiadomosci);
+    socket.on('chat_update', (data) => {
+      setWiadomosci(data);
     });
 
     socket.on('is_typing', (nick) => {
@@ -47,130 +35,71 @@ function App() {
     return () => {
       socket.off('chat_update');
       socket.off('is_typing');
-      clearTimeout(typingTimerRef.current);
     };
   }, []);
 
-  // 🔥 typing (anti-spam)
   const handleTyping = () => {
     if (!mojNick) return;
-    if (typingCooldownRef.current) return;
-
     socket.emit('typing', mojNick);
-
-    typingCooldownRef.current = true;
-
-    setTimeout(() => {
-      typingCooldownRef.current = false;
-    }, 1000);
   };
 
-  // 🔥 dodawanie wiadomości
-  const handleDodajWiadomosc = async (nowyTekst) => {
-    try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author: mojNick, text: nowyTekst })
-      });
-    } catch (error) {
-      console.error(error);
-    }
+  const handleSend = async (text) => {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author: mojNick, text })
+    });
   };
 
-  // 🔥 like
-  const handleLajkuj = async (id) => {
-    try {
-      await fetch(`${API_URL}/${id}/like`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author: mojNick })
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // 🔥 delete
-  const handleUsun = async (id) => {
-    if (!window.confirm('Czy na pewno chcesz usunąć tę wiadomość?')) return;
-
-    try {
-      await fetch(`${API_URL}/${id}`, {
-        method: 'DELETE'
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // 🔥 logout
-  const handleWyloguj = () => {
-    socket.disconnect();
-    localStorage.removeItem('shoutboxNick');
-    setMojNick('');
-  };
-
-  // 🔥 login screen
-  if (!mojNick) {
-    return (
-      <div className="app-container">
-        <Header />
-        <Login onZaloguj={setMojNick} />
-      </div>
+  const handleLike = async (id) => {
+    setWiadomosci(prev =>
+      prev.map(msg =>
+        msg.id === id
+          ? { ...msg, likes: (msg.likes || 0) + 1 }
+          : msg
+      )
     );
+
+    await fetch(`${API_URL}/${id}/like`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author: mojNick })
+    });
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+  };
+
+  if (!mojNick) {
+    return <Login setMojNick={setMojNick} />;
   }
 
   return (
     <div className="app-container">
-      <Header />
 
-      <button
-        onClick={handleWyloguj}
-        style={{
-          margin: '10px 20px',
-          padding: '6px 12px',
-          cursor: 'pointer'
-        }}
-      >
-        Wyloguj
-      </button>
+      <h2>💬 Shoutbox PRO</h2>
 
-      <div className="chat-window">
-        {wiadomosci.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#999' }}>
-            Ładowanie wiadomości...
-          </p>
-        ) : (
-          wiadomosci.map((msg) => (
-            <Message
-              key={msg.id}
-              msg={msg}
-              mojNick={mojNick}
-              onLike={handleLajkuj}
-              onDelete={handleUsun}
-            />
-          ))
-        )}
-      </div>
-
-      {/* typing indicator */}
-      {ktoPisze && ktoPisze !== mojNick && (
-        <div
-          style={{
-            padding: '0 20px',
-            fontSize: '0.85em',
-            color: '#7f8c8d',
-            fontStyle: 'italic',
-            marginBottom: '5px'
-          }}
-        >
-          ✏️ {ktoPisze} pisze wiadomość...
+      {ktoPisze && (
+        <div style={{ fontSize: '0.8em', color: '#777', marginBottom: 10 }}>
+          ✏️ {ktoPisze} pisze...
         </div>
       )}
 
+      <div className="chat-window">
+        {wiadomosci.map(msg => (
+          <Message
+            key={msg.id}
+            msg={msg}
+            mojNick={mojNick}
+            onLike={handleLike}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
+
       <MessageForm
-        onWyslij={handleDodajWiadomosc}
+        onSend={handleSend}
         onTyping={handleTyping}
       />
     </div>

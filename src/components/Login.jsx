@@ -1,44 +1,28 @@
 import { useState } from 'react';
 
-function Login({ onZaloguj }) {
+function Login({ setMojNick }) {
   const [nick, setNick] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleLogin = () => {
+    if (!nick.trim()) return;
 
-    if (nick.trim() === '') return;
-
-    // tylko przekazujemy do App.jsx
-    onZaloguj(nick.trim());
+    localStorage.setItem('shoutboxNick', nick);
+    setMojNick(nick);
   };
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h2>Wejdź na czat</h2>
+    <div style={{ padding: 40, textAlign: 'center' }}>
+      <h1>💬 Shoutbox PRO</h1>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Wpisz nick..."
-          value={nick}
-          onChange={(e) => setNick(e.target.value)}
-          style={{
-            padding: '10px',
-            fontSize: '16px',
-            marginRight: '10px'
-          }}
-        />
+      <input
+        placeholder="Twój nick"
+        value={nick}
+        onChange={(e) => setNick(e.target.value)}
+      />
 
-        <button
-          type="submit"
-          style={{
-            padding: '10px 15px',
-            cursor: 'pointer'
-          }}
-        >
-          Wejdź
-        </button>
-      </form>
+      <button onClick={handleLogin} style={{ marginLeft: 10 }}>
+        Wejdź
+      </button>
     </div>
   );
 }
