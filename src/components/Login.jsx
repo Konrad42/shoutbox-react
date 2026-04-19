@@ -8,30 +8,36 @@ function Login({ onZaloguj }) {
 
     if (nick.trim() === '') return;
 
-    localStorage.setItem('shoutboxNick', nick);
-    onZaloguj(nick);
+    // tylko przekazujemy do App.jsx
+    onZaloguj(nick.trim());
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-      <h2 style={{ color: '#8e44ad' }}>
-        Wpisz swój nick, aby dołączyć
-      </h2>
+    <div style={{ textAlign: 'center', marginTop: '50px' }}>
+      <h2>Wejdź na czat</h2>
 
-      <form
-        onSubmit={handleSubmit}
-        className="chat-form"
-        style={{ justifyContent: 'center', borderTop: 'none' }}
-      >
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
-          placeholder="Twój nick..."
+          placeholder="Wpisz nick..."
           value={nick}
           onChange={(e) => setNick(e.target.value)}
-          style={{ maxWidth: '300px' }}
+          style={{
+            padding: '10px',
+            fontSize: '16px',
+            marginRight: '10px'
+          }}
         />
 
-        <button type="submit">Wejdź</button>
+        <button
+          type="submit"
+          style={{
+            padding: '10px 15px',
+            cursor: 'pointer'
+          }}
+        >
+          Wejdź
+        </button>
       </form>
     </div>
   );
