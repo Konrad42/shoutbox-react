@@ -11,12 +11,18 @@ const API_URL = `${BASE_URL}/api/messages`;
 const socket = io(BASE_URL);
 
 function App() {
-  const [mojNick, setMojNick] = useState(localStorage.getItem('shoutboxNick') || '');
+  const [mojNick, setMojNick] = useState(
+    localStorage.getItem('shoutboxNick') || ''
+  );
+
   const [wiadomosci, setWiadomosci] = useState([]);
   const [ktoPisze, setKtoPisze] = useState(null);
 
   const typingTimerRef = useRef(null);
 
+  // =========================
+  // SOCKET SYNC
+  // =========================
   useEffect(() => {
     socket.on('chat_update', (data) => {
       setWiadomosci(data);
@@ -35,42 +41,64 @@ function App() {
     return () => {
       socket.off('chat_update');
       socket.off('is_typing');
+      clearTimeout(typingTimerRef.current);
     };
   }, []);
 
+  // =========================
+  // TYPING EVENT
+  // =========================
   const handleTyping = () => {
     if (!mojNick) return;
     socket.emit('typing', mojNick);
   };
 
+  // =========================
+  // SEND MESSAGE
+  // =========================
   const handleSend = async (text) => {
-    await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author: mojNick, text })
-    });
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author: mojNick, text })
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  // =========================
+  // LIKE (FIXED)
+  // =========================
   const handleLike = async (id) => {
-    setWiadomosci(prev =>
-      prev.map(msg =>
-        msg.id === id
-          ? { ...msg, likes: (msg.likes || 0) + 1 }
-          : msg
-      )
-    );
-
-    await fetch(`${API_URL}/${id}/like`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author: mojNick })
-    });
+    try {
+      await fetch(`${API_URL}/${id}/like`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author: mojNick })
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  // =========================
+  // DELETE
+  // =========================
   const handleDelete = async (id) => {
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    try {
+      await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  // =========================
+  // LOGIN GUARD
+  // =========================
   if (!mojNick) {
     return <Login setMojNick={setMojNick} />;
   }
@@ -80,14 +108,16 @@ function App() {
 
       <h2>💬 Shoutbox PRO</h2>
 
-      {ktoPisze && (
+      {/* TYPING INDICATOR */}
+      {ktoPisze && ktoPisze !== mojNick && (
         <div style={{ fontSize: '0.8em', color: '#777', marginBottom: 10 }}>
           ✏️ {ktoPisze} pisze...
         </div>
       )}
 
+      {/* CHAT */}
       <div className="chat-window">
-        {wiadomosci.map(msg => (
+        {wiadomosci.map((msg) => (
           <Message
             key={msg.id}
             msg={msg}
@@ -98,6 +128,7 @@ function App() {
         ))}
       </div>
 
+      {/* FORM */}
       <MessageForm
         onSend={handleSend}
         onTyping={handleTyping}
