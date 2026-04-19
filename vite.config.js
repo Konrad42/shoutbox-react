@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   // Pamiętaj o SWOJEJ nazwie repozytorium na GitHubie!
-  base: '/shoutbox_react/', 
+  base: '/shoutbox-react/', 
   plugins: [
     react(),
     // 2. Dodajemy i konfigurujemy wtyczkę PWA
