@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
 import Header from './components/Header';
@@ -13,32 +13,34 @@ const socket = io(SOCKET_URL);
 
 function App() {
   const [wiadomosci, setWiadomosci] = useState([]);
-
   const [mojNick, setMojNick] = useState(
     localStorage.getItem('shoutboxNick') || ''
   );
-
   const [ktoPisze, setKtoPisze] = useState(null);
 
-  // 🔥 SYNCHRONIZACJA localStorage (ważne)
+  // 🔥 refs (ważne dla stabilności)
+  const typingTimerRef = useRef(null);
+  const typingCooldownRef = useRef(false);
+
+  // 🔥 zapis nicka
   useEffect(() => {
     if (mojNick) {
       localStorage.setItem('shoutboxNick', mojNick);
     }
   }, [mojNick]);
 
+  // 🔥 socket logic
   useEffect(() => {
     socket.on('chat_update', (noweWiadomosci) => {
       setWiadomosci(noweWiadomosci);
     });
 
-    let typingTimer;
-
     socket.on('is_typing', (nick) => {
       setKtoPisze(nick);
 
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(() => {
+      clearTimeout(typingTimerRef.current);
+
+      typingTimerRef.current = setTimeout(() => {
         setKtoPisze(null);
       }, 2000);
     });
@@ -46,14 +48,25 @@ function App() {
     return () => {
       socket.off('chat_update');
       socket.off('is_typing');
+      clearTimeout(typingTimerRef.current);
     };
   }, []);
 
+  // 🔥 typing (anti-spam)
   const handleTyping = () => {
     if (!mojNick) return;
+    if (typingCooldownRef.current) return;
+
     socket.emit('typing', mojNick);
+
+    typingCooldownRef.current = true;
+
+    setTimeout(() => {
+      typingCooldownRef.current = false;
+    }, 1000);
   };
 
+  // 🔥 dodawanie wiadomości
   const handleDodajWiadomosc = async (nowyTekst) => {
     try {
       await fetch(API_URL, {
@@ -66,6 +79,7 @@ function App() {
     }
   };
 
+  // 🔥 like
   const handleLajkuj = async (id) => {
     try {
       await fetch(`${API_URL}/${id}/like`, {
@@ -78,8 +92,9 @@ function App() {
     }
   };
 
+  // 🔥 delete
   const handleUsun = async (id) => {
-    if (!window.confirm("Czy na pewno chcesz usunąć tę wiadomość?")) return;
+    if (!window.confirm('Czy na pewno chcesz usunąć tę wiadomość?')) return;
 
     try {
       await fetch(`${API_URL}/${id}`, {
@@ -90,13 +105,14 @@ function App() {
     }
   };
 
-  // 🔥 PEWNE WYLOGOWANIE
+  // 🔥 logout
   const handleWyloguj = () => {
-    socket.disconnect(); // opcjonalnie, ale dobre UX
+    socket.disconnect();
     localStorage.removeItem('shoutboxNick');
     setMojNick('');
   };
 
+  // 🔥 login screen
   if (!mojNick) {
     return (
       <div className="app-container">
@@ -110,7 +126,6 @@ function App() {
     <div className="app-container">
       <Header />
 
-      {/* WYLOGOWANIE */}
       <button
         onClick={handleWyloguj}
         style={{
@@ -140,8 +155,8 @@ function App() {
         )}
       </div>
 
-      {/* INFO: kto pisze */}
-      {ktoPisze && (
+      {/* typing indicator */}
+      {ktoPisze && ktoPisze !== mojNick && (
         <div
           style={{
             padding: '0 20px',
