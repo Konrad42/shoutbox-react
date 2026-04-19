@@ -13,11 +13,19 @@ const socket = io(SOCKET_URL);
 
 function App() {
   const [wiadomosci, setWiadomosci] = useState([]);
+
   const [mojNick, setMojNick] = useState(
     localStorage.getItem('shoutboxNick') || ''
   );
 
   const [ktoPisze, setKtoPisze] = useState(null);
+
+  // 🔥 SYNCHRONIZACJA localStorage (ważne)
+  useEffect(() => {
+    if (mojNick) {
+      localStorage.setItem('shoutboxNick', mojNick);
+    }
+  }, [mojNick]);
 
   useEffect(() => {
     socket.on('chat_update', (noweWiadomosci) => {
@@ -82,8 +90,9 @@ function App() {
     }
   };
 
-  // NOWOŚĆ: wylogowanie
+  // 🔥 PEWNE WYLOGOWANIE
   const handleWyloguj = () => {
+    socket.disconnect(); // opcjonalnie, ale dobre UX
     localStorage.removeItem('shoutboxNick');
     setMojNick('');
   };
@@ -131,6 +140,7 @@ function App() {
         )}
       </div>
 
+      {/* INFO: kto pisze */}
       {ktoPisze && (
         <div
           style={{
