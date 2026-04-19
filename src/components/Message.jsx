@@ -1,74 +1,62 @@
-function Message({ msg }) {
-  const awatarUrl = `https://api.dicebear.com/9.x/bottts/svg?seed=${msg.author}`;
-
-  const czas = new Date(msg.timestamp).toLocaleTimeString('pl-PL', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
+function Message({ msg, mojNick, onLike, onDelete }) {
   return (
     <div
+      className="message"
       style={{
-        display: 'flex',
-        gap: '15px',
-        background: 'white',
-        padding: '15px',
-        margin: '10px 0',
-        borderRadius: '10px',
-        border: '1px solid #eee',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
+        padding: '10px',
+        margin: '10px 20px',
+        borderRadius: '8px',
+        background: '#f5f6f7',
+        wordBreak: 'break-word'
       }}
     >
-      <div>
-        <img
-          src={awatarUrl}
-          alt="Avatar"
-          style={{
-            width: '45px',
-            height: '45px',
-            borderRadius: '50%',
-            backgroundColor: '#e9ecef',
-          }}
-        />
+      {/* 👤 AUTOR */}
+      <div
+        style={{
+          fontWeight: 'bold',
+          marginBottom: '5px',
+          fontSize: '0.95em'
+        }}
+      >
+        {msg.author}
       </div>
 
-      <div style={{ flexGrow: 1 }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '5px',
-          }}
-        >
-          <strong style={{ color: '#2c3e50' }}>
-            {msg.author}
-          </strong>
+      {/* 💬 TREŚĆ */}
+      <div style={{ marginBottom: '10px' }}>
+        {msg.text}
+      </div>
 
-          <span style={{ fontSize: '0.85em', color: '#7f8c8d' }}>
-            {czas}
-          </span>
-        </div>
-
-        <div
+      {/* ⚡ AKCJE */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        {/* ❤️ LIKE */}
+        <button
+          onClick={() => onLike(msg.id)}
           style={{
-            wordBreak: 'break-word',
-            color: '#333',
-            lineHeight: '1.5',
-          }}
-        >
-          {msg.text}
-        </div>
-
-        <div
-          style={{
-            marginTop: '10px',
-            fontSize: '0.9em',
-            color: '#e84393',
-            fontWeight: 'bold',
+            cursor: 'pointer',
+            marginRight: '12px',
+            border: 'none',
+            background: 'transparent',
+            fontSize: '16px'
           }}
         >
           ❤️ {msg.likes || 0}
-        </div>
+        </button>
+
+        {/* 🗑 USUŃ (tylko autor wiadomości) */}
+        {msg.author === mojNick && (
+          <button
+            onClick={() => onDelete(msg.id)}
+            style={{
+              cursor: 'pointer',
+              border: 'none',
+              background: 'transparent',
+              color: 'red',
+              fontSize: '14px'
+            }}
+          >
+            Usuń
+          </button>
+        )}
       </div>
     </div>
   );
