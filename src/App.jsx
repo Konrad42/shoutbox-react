@@ -12,15 +12,14 @@ const API_URL = 'https://apichat.m89.pl/api/messages';
 const socket = io(SOCKET_URL);
 
 function App() {
-  const [wiadomosci, setWiadomosci] = useState([]);
-  const [mojNick, setMojNick] = useState(
-    localStorage.getItem('shoutboxNick') || ''
-  );
-  const [ktoPisze, setKtoPisze] = useState(null);
-
-  // 🔥 refs (ważne dla stabilności)
-  const typingTimerRef = useRef(null);
-  const typingCooldownRef = useRef(false);
+ 
+ const ekranLogowania = document.getElementById('ekran-logowania');
+        const ekranCzatu = document.getElementById('ekran-czatu');
+        const inputNick = document.getElementById('input-nick');
+        const oknoWiadomosci = document.getElementById('okno-wiadomosci');
+        const inputSzukaj = document.getElementById('input-szukaj');
+        const inputWiadomosc = document.getElementById('input-wiadomosc');
+        const wskaznikPisania = document.getElementById('wskaznik-pisania'); // NOWOŚĆ
 
   // 🔥 zapis nicka
   useEffect(() => {
