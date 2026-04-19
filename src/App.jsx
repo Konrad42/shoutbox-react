@@ -17,7 +17,6 @@ function App() {
     localStorage.getItem('shoutboxNick') || ''
   );
 
-  // NOWOŚĆ: kto pisze
   const [ktoPisze, setKtoPisze] = useState(null);
 
   useEffect(() => {
@@ -27,7 +26,6 @@ function App() {
 
     let typingTimer;
 
-    // NOWOŚĆ: nasłuch "pisania"
     socket.on('is_typing', (nick) => {
       setKtoPisze(nick);
 
@@ -43,7 +41,6 @@ function App() {
     };
   }, []);
 
-  // NOWOŚĆ: wysyłanie sygnału "pisze"
   const handleTyping = () => {
     if (!mojNick) return;
     socket.emit('typing', mojNick);
@@ -85,6 +82,12 @@ function App() {
     }
   };
 
+  // NOWOŚĆ: wylogowanie
+  const handleWyloguj = () => {
+    localStorage.removeItem('shoutboxNick');
+    setMojNick('');
+  };
+
   if (!mojNick) {
     return (
       <div className="app-container">
@@ -97,6 +100,18 @@ function App() {
   return (
     <div className="app-container">
       <Header />
+
+      {/* WYLOGOWANIE */}
+      <button
+        onClick={handleWyloguj}
+        style={{
+          margin: '10px 20px',
+          padding: '6px 12px',
+          cursor: 'pointer'
+        }}
+      >
+        Wyloguj
+      </button>
 
       <div className="chat-window">
         {wiadomosci.length === 0 ? (
@@ -116,7 +131,6 @@ function App() {
         )}
       </div>
 
-      {/* NOWOŚĆ: informacja kto pisze */}
       {ktoPisze && (
         <div
           style={{
